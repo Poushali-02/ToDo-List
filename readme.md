@@ -99,7 +99,3 @@ Follow these steps to get a copy of the project up and running on your local mac
 ## 🤝 Contributing
 
 Feel free to fork this repository and contribute\! Pull requests are welcome.
-
-## 📄 License
-
-This project is open source and available under the [MIT License](https://www.google.com/search?q=LICENSE). (You should create a `LICENSE` file in your repository if you want to explicitly state the license).
