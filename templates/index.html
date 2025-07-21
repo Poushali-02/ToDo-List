@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
+    <title>To Do List</title>
+</head>
+<body>
+    <div class="container">
+        <h1>Your to-do list</h1><br>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}" role="alert">{{ message }}</div>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+        <form action="/add" method="post">
+            <div class="form-group">
+                <label for="exampleFormControlTextarea1">Task Name : </label><br><br>
+                <textarea name="task" class="form-control" placeholder="Add a new task..." id="exampleFormControlTextarea1" rows="3"></textarea>
+            </div>    
+            <br>
+        <button type="submit" class="btn btn-outline-success">Add task</button>
+        </form>
+        {% if todo %}
+        <br><br><h2>Tasks:</h2><br><br>
+            {% for each in todo %}
+                <ul class="list-group">
+                    <li class="list-group-item disabled">{{ loop.index }}. {{ each }}</li>
+                    <p><a href="/delete/{{ loop.index - 1 }}" class="link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">Delete task</a></p>
+                </ul>
+            {% endfor %}
+        {% else %}
+            <p class="text-center">No tasks yet! Add one above.</p>
+        {% endif %}
+    </div>
+</body>
+</html>
