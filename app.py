@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from dotenv import load_dotenv
 import os
 
@@ -37,6 +37,22 @@ def toggle(task_id):
     else:
         flash('Invalid task ID!', 'danger')
     return redirect(url_for('main'))
+
+
+@app.route('/edit/<int:task_id>', methods=['POST'])
+def edit(task_id):
+    
+    if 0 <= task_id < len(tasks):
+        new = request.get_json()
+        new_content = new.get('content', '').strip()
+        
+        if new_content:
+            tasks[task_id]['content'] = new_content
+            return jsonify({'success': True, 'message': 'Task updated successfully!', 'new_content': new_content})
+        else:
+            return jsonify({'success': False, 'message': 'Task content cannot be empty!'}), 400
+    else:
+        return jsonify({'success': False, 'message': 'Task not found!'}), 404
 
 @app.route('/delete/<int:task_id>')
 def delete(task_id):
