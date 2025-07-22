@@ -28,12 +28,33 @@
         </form>
         {% if todo %}
         <br><br><h2>Tasks:</h2><br><br>
+        <ul class="list-group">
             {% for each in todo %}
-                <ul class="list-group">
-                    <li class="list-group-item disabled">{{ loop.index }}. {{ each }}</li>
-                    <p><a href="/delete/{{ loop.index - 1 }}" class="link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">Delete task</a></p>
-                </ul>
+            <li class="list-group-item d-flex align-items-center justify-content-between">
+                <div>
+                    
+                    {% if each.done %}
+                    <span style="text-decoration: line-through; color: gray;">
+                        {{ loop.index }}. {{ each.content }}
+                    </span>
+                    {% else %}
+                    <span>
+                        {{ loop.index }}. {{ each.content }}
+                    </span>
+                    {% endif %}
+                </div>
+
+                <div class="d-flex">
+                    <form action="{{ url_for('toggle', task_id = loop.index - 1  )}}" method="post">
+                        <button type="submit" class="btn btn-sm {% if each.done %}btn-success{% else %}btn-outline-warning{% endif %}">
+                            {% if each.done %}✓{% else %}📍{% endif %}
+                        </button>
+                    </form>
+                    <a href="{{ url_for('delete', task_id=loop.index - 1) }}" class="btn btn-sm btn-outline-danger">Delete</a>
+                </div>
+            </li>
             {% endfor %}
+        </ul>
         {% else %}
             <p class="text-center">No tasks yet! Add one above.</p>
         {% endif %}
