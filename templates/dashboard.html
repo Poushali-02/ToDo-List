@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
+    <title>Task Dashboard</title>
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 500px;
+            margin-top: 50px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}" role="alert">{{ message }}</div>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+        {% if session['username'] %}
+        <h2>Welcome, {{ session['username'] }}!</h2>
+        {% else %}
+        <h2>Welcome to your Task Dashboard!</h2>
+        {% endif %}
+        <form action="/add" method="post">
+            <div class="form-group">
+                <label for="exampleFormControlTextarea1">Task Name : </label><br><br>
+                <textarea name="task" class="form-control" placeholder="Add a new task..." id="exampleFormControlTextarea1" rows="3"></textarea>
+            </div>    
+            <br>
+        <button type="submit" class="btn btn-outline-success">Add task</button>
+        </form>
+        {% if todo %}
+        <br><br><h2>Tasks:</h2><br><br>
+        <ul class="list-group">
+            {% for each in todo %}
+            <li class="list-group-item d-flex align-items-center justify-content-between" id="task-{{ each.id }}">
+                
+                <!-- For showing tasks if done or not -->
+
+                <div class="task-display-mode flex-grow-1">
+                    {% if each.done %}
+                    <span class="text-decoration-line-through text-muted">
+                        {{ loop.index }}. {{ each.content }}
+                    </span>
+                    {% else %}
+                    <span class="task-content">
+                        {{ loop.index }}. {{ each.content }}
+                    </span>
+                    {% endif %}
+                </div>
+
+                <!-- For editing tasks -->
+
+                <div class="task-edit-mode flex-grow-1 d-none">
+                    <input type="text" class="form-control form-control-sm edit-input" value="{{ each.content }}">
+                </div>
+
+                <div class="d-flex">
+                    <form action="{{ url_for('toggle', task_id = each.id) }}" method="post">
+                        <button type="submit" class="btn btn-sm {% if each.done %}btn-success{% else %}btn-outline-warning{% endif %}">
+                            {% if each.done %}✓{% else %}📍{% endif %}
+                        </button>
+                    </form>
+                    
+                    <button class="btn btn-sm btn-outline-info me-2 edit-btn">Edit</button>
+                    <button class="btn btn-sm btn-success me-2 save-btn d-none">Save</button>
+                    <button class="btn btn-sm btn-outline-secondary me-2 cancel-btn d-none">Cancel</button>
+                    <a href="{{ url_for('delete', task_id=each.id) }}" class="btn btn-sm btn-outline-danger">Delete</a>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+            <p class="text-center">No tasks yet! Add one above.</p>
+        {% endif %}
+        <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-danger">Logout</a>
+
+    </div>
+</body>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.edit-btn').forEach(button => {
+        button.addEventListener('click', function(){
+            const listItem = this.closest('.list-group-item'); // Get the parent <li>
+                const displayMode = listItem.querySelector('.task-display-mode');
+                const editMode = listItem.querySelector('.task-edit-mode');
+                const editInput = listItem.querySelector('.edit-input');
+                const taskContentSpan = listItem.querySelector('.task-content');
+
+                const editBtn = listItem.querySelector('.edit-btn');
+                const saveBtn = listItem.querySelector('.save-btn');
+                const cancelBtn = listItem.querySelector('.cancel-btn');
+
+                // Hide display mode, show edit mode
+                displayMode.classList.add('d-none');
+                editMode.classList.remove('d-none');
+
+                //update the input value with the current task content
+                editInput.value = taskContentSpan.innerText.replace(/^\d+\.\s/, '').trim();
+                editInput.focus(); // Focus the input for immediate typing
+
+                // Hide Edit button, show Save and Cancel buttons
+                editBtn.classList.add('d-none');
+                saveBtn.classList.remove('d-none');
+                cancelBtn.classList.remove('d-none');
+        });
+    });
+
+
+    //handle Save button click
+    
+        // Handle Save button clicks
+        document.querySelectorAll('.save-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const listItem = this.closest('.list-group-item');
+                const taskId = listItem.id.split('-')[1]; // Extract ID from "task-X"
+                const newContent = listItem.querySelector('.edit-input').value.trim();
+
+                if (newContent === "") {
+                    alert("Task content cannot be empty!");
+                    return; // Prevent saving empty task
+                }
+
+                // Send data to Flask via Fetch API (AJAX)
+                fetch(`/edit/${taskId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ content: newContent }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const displayMode = listItem.querySelector('.task-display-mode');
+                        const editMode = listItem.querySelector('.task-edit-mode');
+                        const taskContentSpan = listItem.querySelector('.task-content');
+                        const editBtn = listItem.querySelector('.edit-btn');
+                        const saveBtn = listItem.querySelector('.save-btn');
+                        const cancelBtn = listItem.querySelector('.cancel-btn');
+
+                        // Update the displayed text in the span
+                        const originalText = taskContentSpan.innerText;
+                        const prefix = originalText.match(/^\d+\.\s/) ? originalText.match(/^\d+\.\s/)[0] : '';
+                        taskContentSpan.innerText = prefix + data.new_content; // Re-add numbering if present
+
+                        // Switch back to display mode
+                        displayMode.classList.remove('d-none');
+                        editMode.classList.add('d-none');
+                        editBtn.classList.remove('d-none');
+                        saveBtn.classList.add('d-none');
+                        cancelBtn.classList.add('d-none');
+                        // You could also add a client-side flash message here if desired
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Fetch Error:', error);
+                    alert('An error occurred while saving the task.');
+                });
+            });
+        });
+
+    // Handle Cancel button clicks
+    // Handle Cancel button clicks
+        document.querySelectorAll('.cancel-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const listItem = this.closest('.list-group-item');
+                const displayMode = listItem.querySelector('.task-display-mode');
+                const editMode = listItem.querySelector('.task-edit-mode');
+                const editBtn = listItem.querySelector('.edit-btn');
+                const saveBtn = listItem.querySelector('.save-btn');
+                const cancelBtn = listItem.querySelector('.cancel-btn');
+
+                // Switch back to display mode without saving
+                displayMode.classList.remove('d-none');
+                editMode.classList.add('d-none');
+                editBtn.classList.remove('d-none');
+                saveBtn.classList.add('d-none');
+                cancelBtn.classList.add('d-none');
+        });
+    });
+});
+</script>
+</html>
