@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 import os
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
+from datetime import timedelta
 
 load_dotenv()
 def __init__db():
@@ -38,6 +39,7 @@ def get_db():
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('FLASK_SECRET_KEY')
+app.permanent_session_lifetime = timedelta(days=7)
 
 @app.teardown_appcontext
 def close_connection(exception):
@@ -156,7 +158,8 @@ def signup():
             session['user_id'] = user_id
             session['username'] = username
             session['email'] = email
-            session['password'] = password
+            session.permanent = True
+
             flash('Sign up successful!', 'success')
             return redirect(url_for('main'))
         except sqlite3.IntegrityError:
@@ -179,6 +182,7 @@ def login():
         if user and check_password_hash(user['password'], password):
             session['user_id'] = user['id']
             session['username'] = user['username']
+            session.permanent = True
             flash('Login successful!', 'success')
             return redirect(url_for('main'))
         else:
@@ -190,6 +194,7 @@ def login():
 def logout():
     session.pop('user_id', None)
     session.pop('username', None)
+    session.pop('email', None)
     flash('You have been logged out!', 'success')
     return redirect(url_for('login'))
 

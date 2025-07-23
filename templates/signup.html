@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <title>Sign Up</title>
     <style>
         body {
@@ -21,7 +22,7 @@
 </head>
 <body>
     <!-- signup form -->
-    <form method="post" action="/signup">
+    <form method="post" action="/signup" autocomplete="off">
         <div class="container">
             <h1>Sign Up</h1>
             <small>Sign up to create your account</small><br><br>
@@ -36,22 +37,52 @@
             {% endwith %}
             <div class="form-group">
                 <label for="username">Username</label>
-                <input type="text" class="form-control" id="username" name="username" required>
+                <input type="text" class="form-control" id="username" name="username" placeholder="yourname" required>
             </div>
             <br>
             <div class="form-group">
                 <label for="email">Email</label>
-                <input type="email" class="form-control" id="email" name="email" required>
+                <input type="email" class="form-control" id="email" name="email" placeholder="you@example.com" required>
             </div>
             <br>
-            <div class="form-group">
+            <div class="form-group password-field" style="position: relative;">
                 <label for="password">Password</label>
-                <input type="password" class="form-control" id="password" name="password" required>
+                <div class="input-group">
+                    <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required>
+                    <div class="input-group-append">
+                        <span class="input-group-text" style="background: transparent;">
+                            <i class="fa fa-eye" id="togglePassword" style="cursor: pointer;"></i>
+                        </span>
+                    </div>
+                </div>
             </div>
             <br>
             <button type="submit" class="btn btn-primary">Submit</button>
             <br>
         </div>
     </form>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelector('#password').addEventListener('input', function() {
+            const password = this.value;
+            if (password.length < 8) {
+                this.setCustomValidity('Password must be at least 8 characters long.');
+            } else if (!/[A-Z]/.test(password)) {
+                this.setCustomValidity('Password must contain at least one uppercase letter.');
+            } else if (!/[a-z]/.test(password)) {
+                this.setCustomValidity('Password must contain at least one lowercase letter.');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+    });
+    const togglePassword = document.getElementById('togglePassword');
+    const password = document.getElementById('password');
+    togglePassword.addEventListener('click', function(){
+        const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+        password.setAttribute('type', type);
+        this.classList.toggle('fa-eye-slash');
+    })
+</script>
 </body>
 </html>
